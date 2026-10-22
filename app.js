@@ -10,16 +10,51 @@ const statusEl  = document.getElementById("status");
 
 // ---------- Kortlek ----------
 
+const CSV_URL = "KLISTRA_IN_DIN_LÄNK_HÄR";
+
 async function laddaLek() {
-  const svar = await fetch("kort.txt?nocache=" + Date.now());
-  const text = await svar.text();
-  lek = text
+  // Påståenden från kort.txt
+  const txt = await (await fetch("kort.txt?nocache=" + Date.now())).text();
+  const franFil = txt
     .split("\n")
     .map(rad => rad.trim())
     .filter(rad => rad && !rad.startsWith("#"));
+
+  // Påståenden från formuläret
+  let franFormular = [];
+  try {
+    const csv = await (await fetch(CSV_URL + "&nocache=" + Date.now())).text();
+    franFormular = tolkaCsv(csv)
+      .slice(1)                       // hoppa över rubrikraden
+      .map(rad => (rad[1] || "").trim()) // kolumn 2 = svaret, kolumn 1 = tidsstämpel
+      .filter(Boolean);
+  } catch (e) {
+    console.warn("Kunde inte läsa formulärsvar:", e);
+  }
+
+  lek = [...franFil, ...franFormular];
   blanda(lek);
   dragna = 0;
   uppdateraStatus();
+}
+
+// Enkel CSV-tolkare som klarar kommatecken och citattecken i svaren
+function tolkaCsv(text) {
+  const rader = [];
+  let rad = [], falt = "", iCitat = false;
+  for (let i = 0; i < text.length; i++) {
+    const t = text[i];
+    if (iCitat) {
+      if (t === '"' && text[i + 1] === '"') { falt += '"'; i++; }
+      else if (t === '"') iCitat = false;
+      else falt += t;
+    } else if (t === '"') iCitat = true;
+    else if (t === ",") { rad.push(falt); falt = ""; }
+    else if (t === "\n") { rad.push(falt); rader.push(rad); rad = []; falt = ""; }
+    else if (t !== "\r") falt += t;
+  }
+  if (falt || rad.length) { rad.push(falt); rader.push(rad); }
+  return rader;
 }
 
 function blanda(arr) {
