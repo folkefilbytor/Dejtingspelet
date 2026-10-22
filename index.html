@@ -3,54 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kortspel</title>
+  <title>Dejtspelet</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; min-height: 100vh; margin: 0;
-      background: #1e3a2f; color: #fff;
+      background: radial-gradient(circle, #2a5a43, #143024); /* filtbord */
+      color: #fff;
     }
+
+    /* ---------- Kortet ---------- */
+    .bord { perspective: 1000px; }
+
     .kort {
-      width: 280px; min-height: 380px; padding: 24px;
-      background: #fff; color: #222; border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.4);
-      display: flex; align-items: center; justify-content: center;
-      text-align: center; font-size: 1.4rem; box-sizing: border-box;
+      position: relative;
+      width: min(280px, 75vw);
+      aspect-ratio: 5 / 7;              /* riktiga spelkortsproportioner */
+      background: #fffdf7;
+      color: #222;
+      border-radius: 16px;
+      box-shadow: 0 2px 0 #ddd, 0 14px 35px rgba(0,0,0,.5);
       transition: transform .3s;
+      transform-style: preserve-3d;
+      box-sizing: border-box;
     }
     .kort.vand { transform: rotateY(90deg); }
-    .knappar { margin-top: 24px; display: flex; gap: 12px; }
+
+    /* Tunn inre ram */
+    .kort::before {
+      content: "";
+      position: absolute; inset: 10px;
+      border: 1.5px solid #c0392b;
+      border-radius: 10px;
+      opacity: .35;
+      pointer-events: none;
+    }
+
+    /* Hörnmarkeringar */
+    .horn {
+      position: absolute;
+      display: flex; flex-direction: column; align-items: center;
+      color: #c0392b;
+      font-family: Georgia, serif;
+      line-height: 1;
+    }
+    .horn .valor { font-size: 1.3rem; font-weight: bold; }
+    .horn .farg  { font-size: 1.1rem; }
+    .horn.uppe { top: 16px; left: 16px; }
+    .horn.nere { bottom: 16px; right: 16px; transform: rotate(180deg); }
+
+    /* Påståendet i mitten */
+    .mitt {
+      position: absolute; inset: 50px 30px;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.35rem;
+      line-height: 1.35;
+    }
+    /* Stort genomskinligt hjärta bakom texten */
+    .mitt::before {
+      content: "♥";
+      position: absolute;
+      font-size: 9rem;
+      color: #c0392b;
+      opacity: .07;
+      z-index: 0;
+    }
+    #kortText { position: relative; z-index: 1; }
+
+    /* ---------- Baksida ---------- */
+    .kort.baksida {
+      background:
+        repeating-linear-gradient(45deg, #a8323e 0 10px, #8e2a35 10px 20px);
+      border: 10px solid #fffdf7;
+    }
+    .kort.baksida::before { border-color: #fff; opacity: .6; inset: 6px; }
+    .kort.baksida .horn { display: none; }
+    .kort.baksida .mitt::before { color: #fff; opacity: .25; }
+    .kort.baksida #kortText {
+      color: #fff; font-size: 1.1rem;
+      text-shadow: 0 1px 3px rgba(0,0,0,.6);
+    }
+
+    /* ---------- Vinstkort ---------- */
+    .kort.vinst {
+      background: linear-gradient(135deg, #ff6b9d, #ffb3c6);
+      color: #fff;
+    }
+    .kort.vinst .horn { color: #fff; }
+    .kort.vinst .mitt { font-weight: bold; font-size: 1.5rem; }
+    .kort.vinst .mitt::before { color: #fff; opacity: .2; }
+
+    /* ---------- Knappar ---------- */
+    .knappar { margin-top: 28px; display: flex; gap: 12px; }
     button {
       font-size: 1.1rem; padding: 12px 24px; border: none;
       border-radius: 8px; cursor: pointer;
+      box-shadow: 0 3px 0 rgba(0,0,0,.3);
     }
+    button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.3); }
     #dra { background: #f4c542; }
     #avbryt { background: #e05555; color: #fff; }
     button:disabled { opacity: .4; cursor: default; }
     #status { margin-top: 16px; opacity: .8; }
-#fyrverkeri {
-  position: fixed;
-  inset: 0;
-  pointer-events: none; /* knapparna går fortfarande att klicka på */
-  z-index: 10;
-}
-.kort.vinst {
-  background: linear-gradient(135deg, #ff6b9d, #ffb3c6);
-  color: #fff;
-  font-weight: bold;
-  font-size: 1.6rem;
-}
+
+    #fyrverkeri {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 10;
+    }
   </style>
 </head>
 <body>
-<canvas id="fyrverkeri"></canvas>
-  <div id="kort" class="kort">Tryck på "Dra kort" för att börja</div>
+  <canvas id="fyrverkeri"></canvas>
+
+  <div class="bord">
+    <div id="kort" class="kort baksida">
+      <div class="horn uppe"><span class="valor" id="valorUppe">♥</span><span class="farg">♥</span></div>
+      <div class="mitt"><span id="kortText">Tryck på "Dra kort" för att börja</span></div>
+      <div class="horn nere"><span class="valor" id="valorNere">♥</span><span class="farg">♥</span></div>
+    </div>
+  </div>
+
   <div class="knappar">
     <button id="dra">Dra kort</button>
     <button id="avbryt">Avbryt</button>
   </div>
   <p id="status"></p>
+
   <script src="app.js"></script>
 </body>
 </html>
