@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kortspel</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; margin: 0;
+      background: #1e3a2f; color: #fff;
+    }
+    .kort {
+      width: 280px; min-height: 380px; padding: 24px;
+      background: #fff; color: #222; border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; font-size: 1.4rem; box-sizing: border-box;
+      transition: transform .3s;
+    }
+    .kort.vand { transform: rotateY(90deg); }
+    .knappar { margin-top: 24px; display: flex; gap: 12px; }
+    button {
+      font-size: 1.1rem; padding: 12px 24px; border: none;
+      border-radius: 8px; cursor: pointer;
+    }
+    #dra { background: #f4c542; }
+    #avbryt { background: #e05555; color: #fff; }
+    button:disabled { opacity: .4; cursor: default; }
+    #status { margin-top: 16px; opacity: .8; }
+#fyrverkeri {
+  position: fixed;
+  inset: 0;
+  pointer-events: none; /* knapparna går fortfarande att klicka på */
+  z-index: 10;
+}
+.kort.vinst {
+  background: linear-gradient(135deg, #ff6b9d, #ffb3c6);
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.6rem;
+}
+  </style>
+</head>
+<body>
+<canvas id="fyrverkeri"></canvas>
+  <div id="kort" class="kort">Tryck på "Dra kort" för att börja</div>
+  <div class="knappar">
+    <button id="dra">Dra kort</button>
+    <button id="avbryt">Avbryt</button>
+  </div>
+  <p id="status"></p>
+  <script src="app.js"></script>
+</body>
+</html>
